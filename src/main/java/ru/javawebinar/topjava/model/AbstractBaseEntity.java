@@ -3,6 +3,8 @@ package ru.javawebinar.topjava.model;
 public abstract class AbstractBaseEntity {
     protected Integer id;
 
+    protected int userId;
+
     protected AbstractBaseEntity(Integer id) {
         this.id = id;
     }
@@ -13,6 +15,14 @@ public abstract class AbstractBaseEntity {
 
     public Integer getId() {
         return id;
+    }
+
+    public int getUserId() {
+        return userId;
+    }
+
+    public void setUserId(int id) {
+        this.id = userId;
     }
 
     public boolean isNew() {
