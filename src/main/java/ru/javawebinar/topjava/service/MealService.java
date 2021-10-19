@@ -5,7 +5,7 @@ import org.springframework.stereotype.Service;
 import ru.javawebinar.topjava.model.Meal;
 import ru.javawebinar.topjava.repository.MealRepository;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 import static ru.javawebinar.topjava.util.ValidationUtil.checkNotFoundWithId;
@@ -27,8 +27,8 @@ public class MealService {
         checkNotFoundWithId(repository.get(id, userId), userId);
     }
 
-    public List<Meal> getBetweenDates(@Nullable LocalDate startDate, @Nullable LocalDate endDate, int userId) {
-        return repository.getBetween(startDate, endDate, userId);
+    public List<Meal> getBetweenDates(@Nullable LocalDateTime startDateTime, @Nullable LocalDateTime endDateTime, int userId) {
+        return repository.getBetween(startDateTime, endDateTime, userId);
     }
 
     public List<Meal> getAll(int userId) {

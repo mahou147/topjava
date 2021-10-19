@@ -7,9 +7,15 @@ import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Controller;
 import ru.javawebinar.topjava.model.Meal;
 import ru.javawebinar.topjava.service.MealService;
+import ru.javawebinar.topjava.to.MealTo;
+import ru.javawebinar.topjava.util.MealsUtil;
+import ru.javawebinar.topjava.web.SecurityUtil;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
+
+import static ru.javawebinar.topjava.util.ValidationUtil.assureIdConsistent;
+import static ru.javawebinar.topjava.util.ValidationUtil.checkNew;
 
 @Controller
 public class MealRestController {
@@ -18,33 +24,35 @@ public class MealRestController {
     @Autowired
     private MealService service;
 
-    public List<Meal> getAll(int userId) {
+    public List<MealTo> getAll() {
         log.info("getAll");
-        return service.getAll(userId);
+        return MealsUtil.filterByPredicate(service.getAll(SecurityUtil.authUserId()), MealsUtil.DEFAULT_CALORIES_PER_DAY, meal -> true);
     }
 
-    public List<Meal> getBetweenDates(@Nullable LocalDate startDate, @Nullable LocalDate endDate, int userId) {
-        log.info("getBetween startDate={} and endDate={} with userId={}", startDate, endDate, userId);
-        return service.getBetweenDates(startDate, endDate, userId);
+    public List<MealTo> getBetweenDates(@Nullable LocalDateTime startDate, @Nullable LocalDateTime endDate, LocalDateTime startTime, LocalDateTime endTime) {
+        log.info("getBetween startDate={} and endDate={} startTime={} and endTime={}with userId={}", startDate, endDate, startTime, endTime, SecurityUtil.authUserId());
+        return MealsUtil.getFilteredTos(service.getBetweenDates(startDate, endDate, SecurityUtil.authUserId()), MealsUtil.DEFAULT_CALORIES_PER_DAY, startDate, endDate, startTime, endTime);
     }
 
-    public Meal get(int id, int userId) {
-        log.info("get meal with id={} and userId={}", id, userId);
-        return  service.get(id, userId);
+    public Meal get(int id) {
+        log.info("get meal with id={} and userId={}", id, SecurityUtil.authUserId());
+        return  service.get(id, SecurityUtil.authUserId());
     }
 
-    public Meal create (Meal meal, int userId) {
-        log.info("create {} with userId={}", meal, userId);
-        return service.create(meal, userId);
+    public Meal create (Meal meal) {
+        log.info("create {} with userId={}", meal, SecurityUtil.authUserId());
+        checkNew(meal);
+        return service.create(meal, SecurityUtil.authUserId());
     }
 
-    public void update(Meal meal, int userId) {
-        log.info("update {} with id={}", meal, userId);
-        service.update(meal, userId);
+    public void update(Meal meal, int id) {
+        log.info("update {} with id={}", meal, SecurityUtil.authUserId());
+        assureIdConsistent(meal, id);
+        service.update(meal, SecurityUtil.authUserId());
     }
 
-    public void delete(int id, int userId) {
-        log.info("delete meal with id={} and userId={}", id, userId);
-        service.delete(id, userId);
+    public void delete(int id) {
+        log.info("delete meal with id={} and userId={}", id, SecurityUtil.authUserId());
+        service.delete(id, SecurityUtil.authUserId());
     }
 }
