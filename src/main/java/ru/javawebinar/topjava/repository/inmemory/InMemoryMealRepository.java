@@ -35,6 +35,7 @@ public class InMemoryMealRepository implements MealRepository {
             repository.put(meal.getId(), meal);
             return meal;
         }
+        if (repository.get(meal.getId()) != null) return null;
         // handle case: update, but not present in storage
         if (meal.getUserId() == userId) return repository.computeIfAbsent(meal.getId(), id -> meal);
         return null;
@@ -43,14 +44,17 @@ public class InMemoryMealRepository implements MealRepository {
     @Override
     public boolean delete(int id, int userId) {
         log.info("delete meal with id={} and userId={}", id, userId);
-        return repository.remove(id).getUserId() == userId;
+        if (repository.get(id) != null || !repository.get(id).getUserId().equals(userId)) return false;
+        return repository.remove(id) != null;
     }
 
     @Override
     public Meal get(int id, int userId) {
         log.info("get meal with id={} and userId={}", id, userId);
-        if (repository.get(id).getUserId() == userId) {
-            return repository.get(id);
+        Meal aMeal = repository.get(id);
+        if (aMeal == null) return null;
+        if (aMeal.getUserId().equals(userId)) {
+            return aMeal;
         }
         return null;
     }

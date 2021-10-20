@@ -19,27 +19,30 @@ import static ru.javawebinar.topjava.util.ValidationUtil.checkNew;
 
 @Controller
 public class MealRestController {
-    protected final Logger log = LoggerFactory.getLogger(getClass());
+    private final Logger log = LoggerFactory.getLogger(getClass());
 
     @Autowired
     private MealService service;
 
     public List<MealTo> getAll() {
         log.info("getAll");
-        return MealsUtil.filterByPredicate(service.getAll(SecurityUtil.authUserId()), MealsUtil.DEFAULT_CALORIES_PER_DAY, meal -> true);
+        return MealsUtil.getTos(service.getAll(SecurityUtil.authUserId()), MealsUtil.DEFAULT_CALORIES_PER_DAY);
     }
 
-    public List<MealTo> getBetweenDates(@Nullable LocalDateTime startDate, @Nullable LocalDateTime endDate, LocalDateTime startTime, LocalDateTime endTime) {
-        log.info("getBetween startDate={} and endDate={} startTime={} and endTime={}with userId={}", startDate, endDate, startTime, endTime, SecurityUtil.authUserId());
-        return MealsUtil.getFilteredTos(service.getBetweenDates(startDate, endDate, SecurityUtil.authUserId()), MealsUtil.DEFAULT_CALORIES_PER_DAY, startDate, endDate, startTime, endTime);
+    public List<MealTo> getBetweenDates(@Nullable LocalDateTime startDate, @Nullable LocalDateTime endDate,
+                                        LocalDateTime startTime, LocalDateTime endTime) {
+        log.info("getBetween startDate={} and endDate={} startTime={} and endTime={}with userId={}", startDate, endDate,
+                startTime, endTime, SecurityUtil.authUserId());
+        return MealsUtil.getFilteredTos(service.getBetweenDates(startDate, endDate, SecurityUtil.authUserId()),
+                MealsUtil.DEFAULT_CALORIES_PER_DAY, startDate, endDate, startTime, endTime);
     }
 
     public Meal get(int id) {
         log.info("get meal with id={} and userId={}", id, SecurityUtil.authUserId());
-        return  service.get(id, SecurityUtil.authUserId());
+        return service.get(id, SecurityUtil.authUserId());
     }
 
-    public Meal create (Meal meal) {
+    public Meal create(Meal meal) {
         log.info("create {} with userId={}", meal, SecurityUtil.authUserId());
         checkNew(meal);
         return service.create(meal, SecurityUtil.authUserId());
