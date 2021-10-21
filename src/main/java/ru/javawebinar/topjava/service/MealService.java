@@ -27,8 +27,8 @@ public class MealService {
         checkNotFoundWithId(repository.get(id, userId), userId);
     }
 
-    public List<Meal> getBetweenDates(@Nullable LocalDateTime startDateTime, @Nullable LocalDateTime endDateTime, int userId) {
-        return repository.getBetween(startDateTime, endDateTime, userId);
+    public List<Meal> getBetweenHalfOpen(@Nullable LocalDateTime startDate, @Nullable LocalDateTime endDate, int userId) {
+        return repository.getBetweenHalfOpen(startDate, endDate, userId);
     }
 
     public List<Meal> getAll(int userId) {
