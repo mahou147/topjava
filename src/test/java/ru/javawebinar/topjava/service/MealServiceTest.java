@@ -15,7 +15,6 @@ import ru.javawebinar.topjava.model.Meal;
 import ru.javawebinar.topjava.util.exception.NotFoundException;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -61,22 +60,22 @@ public class MealServiceTest {
 
     @Test
     public void deletedNotFound() {
-        assertThrows(NotFoundException.class, () -> service.delete(ID_ADMIN_MEAL,USER_ID));
+        assertThrows(NotFoundException.class, () -> service.delete(ID_ADMIN_MEAL, USER_ID));
     }
 
     @Test
     public void getAll() {
         List<Meal> all = service.getAll(USER_ID);
         assertMatch(all.stream().sorted(Comparator.comparing(Meal::getId)).collect(Collectors.toList()),
-                user_meal_example, meal1, meal2, meal3,
-                meal8, meal9, meal10);
+                user_meal_1, user_meal_2, user_meal_3, user_meal_4,
+                user_meal_5, user_meal_6, user_meal_7, meal_at_the_boundary_value);
     }
 
     @Test
     public void getBetweenInclusive() {
-        List<Meal> filtered = service.getBetweenInclusive(LocalDate.of(2020, 1, 1),
-                LocalDate.of(2021, 1, 1), USER_ID);
-        assertMatch(filtered, user_meal_example, meal1, meal10);
+        List<Meal> filtered = service.getBetweenInclusive(LocalDate.of(2019, 1, 1),
+                LocalDate.of(2020, 1, 30), USER_ID);
+        assertMatch(filtered, user_meal_1, user_meal_2, user_meal_7);
     }
 
     @Test
@@ -105,8 +104,7 @@ public class MealServiceTest {
 
     @Test
     public void duplicateDateTimeCreate() {
-        assertThrows(DataAccessException.class, () -> service.create(new Meal(null, LocalDateTime.of(
-                2020, 12, 19, 10, 7, 4), "Duplicate",
-                777), USER_ID));
+        assertThrows(DataAccessException.class, () -> service.create(new Meal(null,
+                user_meal_1.getDateTime(), "Duplicate", 777), USER_ID));
     }
 }
