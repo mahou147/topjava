@@ -8,12 +8,12 @@ import java.time.LocalTime;
 
 @NamedQueries({
         @NamedQuery(name = Meal.DELETE, query = "DELETE FROM Meal m WHERE m.id=:id AND m.user.id=:userId"),
-        @NamedQuery(name = Meal.GET, query = "SELECT m FROM Meal m LEFT JOIN FETCH m.user.id " +
+        @NamedQuery(name = Meal.GET, query = "SELECT m FROM Meal m " +
                 "WHERE m.id=:id AND m.user.id=:userId"),
-        @NamedQuery(name = Meal.ALL_SORTED, query = "SELECT m FROM Meal m LEFT JOIN FETCH m.user.id " +
-                "ORDER BY m.dateTime"),
-        @NamedQuery(name = Meal.ALL_BETWEEN, query = "SELECT m FROM Meal m LEFT JOIN FETCH m.user.id " +
-                "WHERE m.dateTime >=:startDateTime AND m.dateTime <:endDateTime ORDER BY m.dateTime"),
+        @NamedQuery(name = Meal.ALL_SORTED, query = "SELECT m FROM Meal m WHERE m.user.id=:userId " +
+                "ORDER BY m.dateTime DESC"),
+        @NamedQuery(name = Meal.ALL_BETWEEN, query = "SELECT m FROM Meal m WHERE m.user.id=:userId AND" +
+                " m.dateTime >=:startDateTime AND m.dateTime <:endDateTime ORDER BY m.dateTime DESC"),
 })
 @Entity
 @Table(name = "meals",

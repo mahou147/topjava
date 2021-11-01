@@ -20,49 +20,50 @@ public class JpaMealRepository implements MealRepository {
     @Override
     @Transactional
     public Meal save(Meal meal, int userId) {
-        if(meal.isNew()) {
-            User ref = em.getReference(User.class, userId);
+        User ref = em.getReference(User.class, userId);
+        if (meal.isNew()) {
             meal.setUser(ref);
             em.persist(meal);
             return meal;
         }
-        else {
-            Meal aMeal =  em.createNamedQuery(Meal.GET, Meal.class)
-                    .setParameter("id", meal.id())
-                    .setParameter("user_id", userId)
-                    .getSingleResult();
+        if (get(meal.id(), userId) != null) {
+            Meal aMeal = em.find(Meal.class, meal.id());
+            aMeal.setUser(ref);
             return em.merge(aMeal);
         }
+        return null;
     }
 
     @Override
     @Transactional
     public boolean delete(int id, int userId) {
-        return em.createNamedQuery(Meal.DELETE)
+        return em.createNamedQuery(Meal.DELETE, Meal.class)
                 .setParameter("id", id)
-                .setParameter("user_id", userId)
-                .executeUpdate() !=0;
+                .setParameter("userId", userId)
+                .executeUpdate() != 0;
     }
 
     @Override
     public Meal get(int id, int userId) {
         return em.createNamedQuery(Meal.GET, Meal.class)
                 .setParameter("id", id)
-                .setParameter("user_id", userId)
+                .setParameter("userId", userId)
                 .getSingleResult();
     }
 
     @Override
     public List<Meal> getAll(int userId) {
         return em.createNamedQuery(Meal.ALL_SORTED, Meal.class)
-                .setParameter("user_id", userId)
+                .setParameter("userId", userId)
                 .getResultList();
     }
 
     @Override
     public List<Meal> getBetweenHalfOpen(LocalDateTime startDateTime, LocalDateTime endDateTime, int userId) {
         return em.createNamedQuery(Meal.ALL_BETWEEN, Meal.class)
-                .setParameter("user_id", userId)
+                .setParameter("userId", userId)
+                .setParameter("startDateTime", startDateTime)
+                .setParameter("endDateTime", endDateTime)
                 .getResultList();
     }
 }
