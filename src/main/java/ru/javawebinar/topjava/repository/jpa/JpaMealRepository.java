@@ -12,6 +12,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Repository
+@Transactional(readOnly = true)
 public class JpaMealRepository implements MealRepository {
 
     @PersistenceContext
@@ -29,6 +30,9 @@ public class JpaMealRepository implements MealRepository {
         if (get(meal.id(), userId) != null) {
             Meal aMeal = em.find(Meal.class, meal.id());
             aMeal.setUser(ref);
+            aMeal.setDescription(meal.getDescription());
+            aMeal.setDateTime(meal.getDateTime());
+            aMeal.setCalories(meal.getCalories());
             return em.merge(aMeal);
         }
         return null;
@@ -37,7 +41,7 @@ public class JpaMealRepository implements MealRepository {
     @Override
     @Transactional
     public boolean delete(int id, int userId) {
-        return em.createNamedQuery(Meal.DELETE, Meal.class)
+        return em.createNamedQuery(Meal.DELETE)
                 .setParameter("id", id)
                 .setParameter("userId", userId)
                 .executeUpdate() != 0;
@@ -45,6 +49,8 @@ public class JpaMealRepository implements MealRepository {
 
     @Override
     public Meal get(int id, int userId) {
+        Meal aMeal = em.find(Meal.class, id);
+        if (aMeal == null || aMeal.getUser().id() != userId) return null;
         return em.createNamedQuery(Meal.GET, Meal.class)
                 .setParameter("id", id)
                 .setParameter("userId", userId)
