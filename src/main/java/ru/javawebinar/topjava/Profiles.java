@@ -8,7 +8,7 @@ public class Profiles {
             JPA = "jpa",
             DATAJPA = "datajpa";
 
-    public static final String REPOSITORY_IMPLEMENTATION = DATAJPA;
+    public static final String REPOSITORY_IMPLEMENTATION = JDBC;
 
     public static final String
             POSTGRES_DB = "postgres",
@@ -20,18 +20,6 @@ public class Profiles {
             return POSTGRES_DB;
         } else if (ClassUtils.isPresent("org.hsqldb.jdbcDriver", null)) {
             return HSQL_DB;
-        } else {
-            throw new IllegalStateException("Could not find DB driver");
-        }
-    }
-
-    public static String getActiveRepositoryProfile() {
-        if (ClassUtils.isPresent("org.springframework.jdbc.core.JdbcTemplate", null)) {
-            return JDBC;
-        } else if (ClassUtils.isPresent("org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean", null)) {
-            return JPA;
-        } else if (ClassUtils.isPresent("org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean", null)) {
-            return JPA + DATAJPA;
         } else {
             throw new IllegalStateException("Could not find DB driver");
         }
