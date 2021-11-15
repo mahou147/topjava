@@ -1,5 +1,7 @@
 package ru.javawebinar.topjava.service;
 
+import org.junit.Assume;
+import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.rules.ExternalResource;
@@ -14,6 +16,8 @@ import ru.javawebinar.topjava.ActiveDbProfileResolver;
 import ru.javawebinar.topjava.TimingRules;
 
 import static org.junit.Assert.assertThrows;
+import static ru.javawebinar.topjava.Profiles.JDBC;
+import static ru.javawebinar.topjava.Profiles.getActiveDbProfile;
 import static ru.javawebinar.topjava.util.ValidationUtil.getRootCause;
 
 @ContextConfiguration({
@@ -40,5 +44,14 @@ public abstract class AbstractServiceTest {
                 throw getRootCause(e);
             }
         });
+    }
+
+    @BeforeClass
+    public static void checkRepositoryType() {
+        Assume.assumeFalse(AbstractServiceTest.isJdbc());
+    }
+
+    public static boolean isJdbc() {
+        return getActiveDbProfile().equals(JDBC);
     }
 }
