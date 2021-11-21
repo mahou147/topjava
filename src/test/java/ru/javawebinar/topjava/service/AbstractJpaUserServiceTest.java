@@ -12,8 +12,9 @@ import java.util.Date;
 import java.util.Set;
 
 abstract public class AbstractJpaUserServiceTest extends AbstractUserServiceTest{
+
     @Autowired
-    protected JpaUtil jpaUtil;
+    public JpaUtil jpaUtil;
 
     @Before
     @Override
