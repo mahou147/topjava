@@ -1,6 +1,6 @@
-package ru.javawebinar.topjava.web;
+package ru.javawebinar.topjava.web.meal;
 
-import org.springframework.beans.factory.annotation.Autowired;
+
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.util.StringUtils;
@@ -8,10 +8,10 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import ru.javawebinar.topjava.model.Meal;
 import ru.javawebinar.topjava.service.MealService;
 import ru.javawebinar.topjava.util.MealsUtil;
+import ru.javawebinar.topjava.web.SecurityUtil;
 
 import javax.servlet.http.HttpServletRequest;
 import java.time.LocalDate;
@@ -26,25 +26,27 @@ import static ru.javawebinar.topjava.util.DateTimeUtil.parseLocalTime;
 
 @Controller
 @RequestMapping("/meals")
-public class JspMealController {
-    @Autowired
-    private MealService service;
+public class JspMealController extends AbstractMealController {
 
-    @GetMapping("")
+    public JspMealController(MealService service) {
+        super(service);
+    }
+
+    @GetMapping
     public String getAll(Model model) {
         int userId = SecurityUtil.authUserId();
-        model.addAttribute("meals", MealsUtil.getTos(service.getAll(userId), SecurityUtil.authUserCaloriesPerDay()));
+        model.addAttribute("meals", MealsUtil.getTos(super.getAll(userId), SecurityUtil.authUserCaloriesPerDay()));
         return "meals";
     }
 
-    @PostMapping("/filter")
-    public String getAll(Model model, HttpServletRequest request) {
+    @GetMapping("/filter")
+    public String getBetween(Model model, HttpServletRequest request) {
         LocalDate startDate = parseLocalDate(request.getParameter("startDate"));
         LocalDate endDate = parseLocalDate(request.getParameter("endDate"));
         LocalTime startTime = parseLocalTime(request.getParameter("startTime"));
         LocalTime endTime = parseLocalTime(request.getParameter("endTime"));
         int userId = SecurityUtil.authUserId();
-        List<Meal> mealsDateFiltered = service.getBetweenInclusive(startDate, endDate, userId);
+        List<Meal> mealsDateFiltered = super.getBetween(startDate, endDate, userId);
         model.addAttribute("meals", MealsUtil.getFilteredTos(mealsDateFiltered, SecurityUtil.authUserCaloriesPerDay(), startTime, endTime));
         return "meals";
     }
@@ -58,31 +60,31 @@ public class JspMealController {
 
     @GetMapping("/update")
     public String update(HttpServletRequest request, Model model) {
-        model.addAttribute("meal", service.get(getId(request), SecurityUtil.authUserId()));
+        model.addAttribute("meal", super.get(getId(request), SecurityUtil.authUserId()));
         return "mealForm";
     }
 
     @GetMapping("/delete")
     public String delete(HttpServletRequest request) {
-        service.delete(getId(request), SecurityUtil.authUserId());
+        super.delete(getId(request), SecurityUtil.authUserId());
         return "redirect:/meals";
     }
 
-    @PostMapping()
+    @PostMapping
     public String createOrUpdate(HttpServletRequest request) {
         int userId = SecurityUtil.authUserId();
         LocalDateTime ldt = LocalDateTime.parse(request.getParameter("dateTime"));
         String description = request.getParameter("description");
         int calories = Integer.parseInt(request.getParameter("calories"));
         if (StringUtils.hasLength(request.getParameter("id"))) {
-            Meal meal = service.get(getId(request), userId);
+            Meal meal = super.get(getId(request), userId);
             meal.setDateTime(ldt);
             meal.setDescription(description);
             meal.setCalories(calories);
-            service.update(meal, userId);
+            super.update(meal, userId);
         } else {
             Meal meal = new Meal(ldt, description, calories);
-            service.create(meal, userId);
+            super.create(meal, userId);
         }
         return "redirect:meals";
     }

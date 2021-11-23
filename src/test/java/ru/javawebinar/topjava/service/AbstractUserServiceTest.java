@@ -26,7 +26,7 @@ public abstract class AbstractUserServiceTest extends AbstractServiceTest {
 
     @Before
     public void setup() {
-        Objects.requireNonNull(cacheManager.getCache("users")).clear();
+        cacheManager.getCache("users").clear();
     }
 
     @Test
