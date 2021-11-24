@@ -34,8 +34,7 @@ public class JspMealController extends AbstractMealController {
 
     @GetMapping
     public String getAll(Model model) {
-        int userId = SecurityUtil.authUserId();
-        model.addAttribute("meals", MealsUtil.getTos(super.getAll(userId), SecurityUtil.authUserCaloriesPerDay()));
+        model.addAttribute("meals", MealsUtil.getTos(super.getAll(), SecurityUtil.authUserCaloriesPerDay()));
         return "meals";
     }
 
@@ -45,8 +44,7 @@ public class JspMealController extends AbstractMealController {
         LocalDate endDate = parseLocalDate(request.getParameter("endDate"));
         LocalTime startTime = parseLocalTime(request.getParameter("startTime"));
         LocalTime endTime = parseLocalTime(request.getParameter("endTime"));
-        int userId = SecurityUtil.authUserId();
-        List<Meal> mealsDateFiltered = super.getBetween(startDate, endDate, userId);
+        List<Meal> mealsDateFiltered = super.getBetween(startDate, endDate);
         model.addAttribute("meals", MealsUtil.getFilteredTos(mealsDateFiltered, SecurityUtil.authUserCaloriesPerDay(), startTime, endTime));
         return "meals";
     }
@@ -60,31 +58,26 @@ public class JspMealController extends AbstractMealController {
 
     @GetMapping("/update")
     public String update(HttpServletRequest request, Model model) {
-        model.addAttribute("meal", super.get(getId(request), SecurityUtil.authUserId()));
+        model.addAttribute("meal", super.get(getId(request)));
         return "mealForm";
     }
 
     @GetMapping("/delete")
     public String delete(HttpServletRequest request) {
-        super.delete(getId(request), SecurityUtil.authUserId());
+        super.delete(getId(request));
         return "redirect:/meals";
     }
 
     @PostMapping
     public String createOrUpdate(HttpServletRequest request) {
-        int userId = SecurityUtil.authUserId();
         LocalDateTime ldt = LocalDateTime.parse(request.getParameter("dateTime"));
         String description = request.getParameter("description");
         int calories = Integer.parseInt(request.getParameter("calories"));
+        Meal meal = new Meal(ldt, description, calories);
         if (StringUtils.hasLength(request.getParameter("id"))) {
-            Meal meal = super.get(getId(request), userId);
-            meal.setDateTime(ldt);
-            meal.setDescription(description);
-            meal.setCalories(calories);
-            super.update(meal, userId);
+            super.update(meal);
         } else {
-            Meal meal = new Meal(ldt, description, calories);
-            super.create(meal, userId);
+            super.create(meal);
         }
         return "redirect:meals";
     }

@@ -23,30 +23,25 @@ public class MealRestController extends AbstractMealController {
     }
 
     public Meal get(int id) {
-        int userId = SecurityUtil.authUserId();
-        return super.get(id, userId);
+        return super.get(id);
     }
 
     public void delete(int id) {
-        int userId = SecurityUtil.authUserId();
-        super.delete(id, userId);
+        super.delete(id);
     }
 
-    public List<MealTo> getAll() {
-        int userId = SecurityUtil.authUserId();
-        return MealsUtil.getTos(super.getAll(userId), SecurityUtil.authUserCaloriesPerDay());
+    public List<Meal> getAll() {
+        return super.getAll();
     }
 
     public Meal create(Meal meal) {
-        int userId = SecurityUtil.authUserId();
         checkNew(meal);
-        return super.create(meal, userId);
+        return super.create(meal);
     }
 
     public void update(Meal meal, int id) {
-        int userId = SecurityUtil.authUserId();
         assureIdConsistent(meal, id);
-        super.update(meal, userId);
+        super.update(meal);
     }
 
     /**
@@ -57,8 +52,7 @@ public class MealRestController extends AbstractMealController {
      */
     public List<MealTo> getBetween(@Nullable LocalDate startDate, @Nullable LocalTime startTime,
                                    @Nullable LocalDate endDate, @Nullable LocalTime endTime) {
-        int userId = SecurityUtil.authUserId();
-        List<Meal> mealsDateFiltered = super.getBetween(startDate, endDate, userId);
+        List<Meal> mealsDateFiltered = super.getBetween(startDate, endDate);
         return MealsUtil.getFilteredTos(mealsDateFiltered, SecurityUtil.authUserCaloriesPerDay(), startTime, endTime);
     }
 }

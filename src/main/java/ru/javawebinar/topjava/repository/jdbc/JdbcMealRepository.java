@@ -12,7 +12,6 @@ import org.springframework.transaction.annotation.Transactional;
 import ru.javawebinar.topjava.model.Meal;
 import ru.javawebinar.topjava.repository.MealRepository;
 
-import javax.validation.Validator;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -30,8 +29,6 @@ public class JdbcMealRepository implements MealRepository {
 
     private final SimpleJdbcInsert insertMeal;
 
-    private final Validator validator;
-
     public JdbcMealRepository(JdbcTemplate jdbcTemplate, NamedParameterJdbcTemplate namedParameterJdbcTemplate) {
         this.insertMeal = new SimpleJdbcInsert(jdbcTemplate)
                 .withTableName("meals")
@@ -39,7 +36,6 @@ public class JdbcMealRepository implements MealRepository {
 
         this.jdbcTemplate = jdbcTemplate;
         this.namedParameterJdbcTemplate = namedParameterJdbcTemplate;
-        this.validator = vf.getValidator();
     }
 
     @Override

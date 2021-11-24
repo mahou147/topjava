@@ -5,6 +5,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import ru.javawebinar.topjava.model.Meal;
 import ru.javawebinar.topjava.service.MealService;
+import ru.javawebinar.topjava.web.SecurityUtil;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -19,33 +20,33 @@ public class AbstractMealController {
         this.service = service;
     }
 
-    Meal create(Meal meal, int userId) {
-        log.info("create {} for user {}", meal, userId);
-        return service.create(meal, userId);
+    Meal create(Meal meal) {
+        log.info("create {} for user {}", meal, meal.getUser());
+        return service.create(meal, SecurityUtil.authUserId());
     }
 
-    void update(Meal meal, int userId) {
-        log.info("update {} for user {}", meal, userId);
-        service.update(meal, userId);
+    void update(Meal meal) {
+        log.info("update {} for user {}", meal, meal.getUser());
+        service.update(meal, SecurityUtil.authUserId());
     }
 
-    void delete(int id, int userId) {
-        log.info("delete meal {} for user {}", id, userId);
-        service.delete(id, userId);
+    void delete(int id) {
+        log.info("delete meal {} for user {}", id, SecurityUtil.authUserId());
+        service.delete(id, SecurityUtil.authUserId());
     }
 
-    Meal get(int id, int userId) {
-        log.info("get meal {} for user {}", id, userId);
-        return service.get(id, userId);
+    Meal get(int id) {
+        log.info("get meal {} for user {}", id, SecurityUtil.authUserId());
+        return service.get(id, SecurityUtil.authUserId());
     }
 
-    List<Meal> getAll(int userId) {
-        log.info("getAll for user {}", userId);
-        return service.getAll(userId);
+    List<Meal> getAll() {
+        log.info("getAll for user {}", SecurityUtil.authUserId());
+        return service.getAll(SecurityUtil.authUserId());
     }
 
-    List<Meal> getBetween(LocalDate startDate, LocalDate endDate, int userId) {
-        log.info("getBetween ({} - {}) for user {}", startDate, endDate, userId);
-        return service.getBetweenInclusive(startDate, endDate, userId);
+    List<Meal> getBetween(LocalDate startDate, LocalDate endDate) {
+        log.info("getBetween ({} - {}) for user {}", startDate, endDate, SecurityUtil.authUserId());
+        return service.getBetweenInclusive(startDate, endDate, SecurityUtil.authUserId());
     }
 }

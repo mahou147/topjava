@@ -1,19 +1,21 @@
 package ru.javawebinar.topjava.service;
 
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.CacheManager;
 import org.springframework.dao.DataAccessException;
+import ru.javawebinar.topjava.MealTestData;
 import ru.javawebinar.topjava.UserTestData;
 import ru.javawebinar.topjava.model.Role;
 import ru.javawebinar.topjava.model.User;
 import ru.javawebinar.topjava.util.exception.NotFoundException;
 
 import java.util.List;
-import java.util.Objects;
 
 import static org.junit.Assert.assertThrows;
+import static ru.javawebinar.topjava.MealTestData.MEAL_MATCHER;
 import static ru.javawebinar.topjava.UserTestData.*;
 
 public abstract class AbstractUserServiceTest extends AbstractServiceTest {
@@ -74,6 +76,12 @@ public abstract class AbstractUserServiceTest extends AbstractServiceTest {
     }
 
     @Test
+    public void getByEmailNotFound() {
+        Assert.assertThrows(NotFoundException.class,
+                () -> service.getByEmail("1"));
+    }
+
+    @Test
     public void update() {
         User updated = getUpdated();
         service.update(updated);
@@ -84,5 +92,18 @@ public abstract class AbstractUserServiceTest extends AbstractServiceTest {
     public void getAll() {
         List<User> all = service.getAll();
         USER_MATCHER.assertMatch(all, admin, user);
+    }
+
+    @Test
+    public void getWithMeals() {
+        User user = service.getWithMeals(USER_ID);
+        USER_MATCHER.assertMatch(user, UserTestData.user);
+        MEAL_MATCHER.assertMatch(user.getMeals(), MealTestData.meals);
+    }
+
+    @Test
+    public void getWithMealsNotFound() {
+        Assert.assertThrows(NotFoundException.class,
+                () -> service.getWithMeals(1));
     }
 }

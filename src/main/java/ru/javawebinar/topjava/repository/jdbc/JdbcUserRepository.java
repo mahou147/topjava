@@ -12,11 +12,12 @@ import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
+import ru.javawebinar.topjava.model.Meal;
 import ru.javawebinar.topjava.model.Role;
 import ru.javawebinar.topjava.model.User;
 import ru.javawebinar.topjava.repository.UserRepository;
+import ru.javawebinar.topjava.util.exception.NotFoundException;
 
-import javax.validation.Validator;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.*;
@@ -28,7 +29,9 @@ import static ru.javawebinar.topjava.util.JdbcValidationUtil.*;
 public class JdbcUserRepository implements UserRepository {
 
     private static final BeanPropertyRowMapper<User> USER_ROW_MAPPER = BeanPropertyRowMapper.newInstance(User.class);
+    private static final BeanPropertyRowMapper<Meal> MEAL_ROW_MAPPER = BeanPropertyRowMapper.newInstance(Meal.class);
     private static final String SQL_GET_ALL_USERS_WITH_ROLES = "SELECT DISTINCT * FROM users ORDER BY name, email";
+    private static final String SQL_GET_WITH_MEALS = "SELECT DISTINCT * FROM users WHERE id = ?";
 
     private final JdbcTemplate jdbcTemplate;
 
@@ -36,22 +39,18 @@ public class JdbcUserRepository implements UserRepository {
 
     private final SimpleJdbcInsert insertUser;
 
-    private final ResultSetExtractor<List<User>> roleExtractor;
-
-    private final Validator validator;
+    private final ResultSetExtractor<List<User>> rsExtractor;
 
     @Autowired
-    public JdbcUserRepository(JdbcTemplate jdbcTemplate, NamedParameterJdbcTemplate namedParameterJdbcTemplate, ResultSetExtractor<List<User>> roleExtractor) {
+    public JdbcUserRepository(JdbcTemplate jdbcTemplate, NamedParameterJdbcTemplate namedParameterJdbcTemplate, ResultSetExtractor<List<User>> rsExtractor) {
         this.insertUser = new SimpleJdbcInsert(jdbcTemplate)
                 .withTableName("users")
                 .usingGeneratedKeyColumns("id");
 
         this.jdbcTemplate = jdbcTemplate;
         this.namedParameterJdbcTemplate = namedParameterJdbcTemplate;
-        this.roleExtractor = roleExtractor;
-        this.validator = vf.getValidator();
+        this.rsExtractor = rsExtractor;
     }
-
 
     @Override
     @Transactional
@@ -76,6 +75,21 @@ public class JdbcUserRepository implements UserRepository {
         return user;
     }
 
+    private void deleteRoles(User user) {
+        jdbcTemplate.update("DELETE FROM user_roles WHERE user_id=?", user.id());
+    }
+
+    private void insertRoles(User user) {
+        Set<Role> roles = user.getRoles();
+        jdbcTemplate.batchUpdate("INSERT INTO user_roles (user_id, role)  VALUES (?, ?)",
+                roles,
+                roles.size(),
+                (ps, role) -> {
+                    ps.setInt(1, user.getId());
+                    ps.setString(2, role.name());
+                });
+    }
+
     @Override
     @Transactional
     public boolean delete(int id) {
@@ -85,7 +99,7 @@ public class JdbcUserRepository implements UserRepository {
     @Override
     public User get(int id) {
         List<User> users = jdbcTemplate.query("SELECT * FROM users JOIN user_roles " +
-                "on users.id = user_roles.user_id WHERE id=?", roleExtractor, id);
+                "ON users.id = user_roles.user_id WHERE id=?", rsExtractor, id);
         return DataAccessUtils.singleResult(users);
     }
 
@@ -94,7 +108,11 @@ public class JdbcUserRepository implements UserRepository {
 //        return jdbcTemplate.queryForObject("SELECT * FROM users WHERE email=?", ROW_MAPPER, email);
         List<User> users = jdbcTemplate.query("SELECT * FROM users WHERE email=?", USER_ROW_MAPPER, email);
         User user = DataAccessUtils.singleResult(users);
-        user.setRoles(getRoles(user.id()));
+        if (user != null) {
+            user.setRoles(getRoles(user.id()));
+        } else {
+            throw new NotFoundException("User with " + email + "is not found");
+        }
         return user;
     }
 
@@ -105,54 +123,51 @@ public class JdbcUserRepository implements UserRepository {
         return users;
     }
 
+    private Set<Role> getRoles(int id) {
+        return jdbcTemplate.query("SELECT * FROM user_roles WHERE user_id=?", rs -> {
+            Set<Role> roles = new HashSet<>();
+            while (rs.next()) {
+                roles.add(Enum.valueOf(Role.class, rs.getString("role")));
+            }
+            return roles;
+        }, id);
+    }
+
+    public User getWithMeals(int id) {
+        List<User> users = jdbcTemplate.query(SQL_GET_WITH_MEALS, USER_ROW_MAPPER, id);
+        User user = DataAccessUtils.singleResult(users);
+        if (user != null) {
+            user.setMeals(getMeals(id));
+            user.setRoles(getRoles(id));
+        } else {
+            throw new NotFoundException("User " + id + "is not found");
+        }
+        return user;
+    }
+
+    private List<Meal> getMeals(int id) {
+        return jdbcTemplate.query("SELECT meals.id, date_time, description, calories FROM meals JOIN users " +
+                "ON users.id = meals.user_id WHERE user_id =? ORDER BY id DESC", rs -> {
+            List<Meal> meals = new ArrayList<>();
+            while (rs.next()) {
+                meals.add(MEAL_ROW_MAPPER.mapRow(rs, rs.getRow()));
+            }
+            return meals;
+        }, id);
+    }
+
     @Component
-    public static class RoleExtractor implements ResultSetExtractor<List<User>> {
+    public static class UserWithRolesExtractor implements ResultSetExtractor<List<User>> {
         @Override
         public List<User> extractData(ResultSet rs) throws SQLException, DataAccessException {
             List<User> usersWithRoles = new ArrayList<>();
             while (rs.next()) {
-                User user = new User();
+                User user = USER_ROW_MAPPER.mapRow(rs, rs.getRow());
                 Set<Role> roles = EnumSet.of(Role.valueOf(rs.getString("role")));
-                user.setId(rs.getInt("id"));
-                user.setName(rs.getString("name"));
-                user.setEmail(rs.getString("email"));
-                user.setPassword(rs.getString("password"));
-                user.setRegistered(rs.getTimestamp("registered"));
-                user.setEnabled(rs.getBoolean("enabled"));
-                user.setCaloriesPerDay(rs.getInt("calories_per_day"));
                 user.setRoles(roles);
                 usersWithRoles.add(user);
             }
             return usersWithRoles;
         }
-    }
-
-    private void deleteRoles(User user) {
-        jdbcTemplate.update("DELETE FROM user_roles WHERE user_id=?", user.id());
-    }
-
-    private void insertRoles(User user) {
-        Set<Role> roles = user.getRoles();
-        jdbcTemplate.batchUpdate("INSERT INTO user_roles (user_id, role)  VALUES (?, ?)",
-                roles,
-                2,
-                (ps, role) -> {
-                    ps.setInt(1, user.getId());
-                    ps.setString(2, role.name());
-                });
-    }
-
-    private Set<Role> getRoles(int id) {
-        Set<Role> roles = jdbcTemplate.query("SELECT * FROM user_roles WHERE user_id=?", new ResultSetExtractor<Set<Role>>() {
-            @Override
-            public Set<Role> extractData(ResultSet rs) throws SQLException, DataAccessException {
-                Set<Role> roles = new HashSet<>();
-                while (rs.next()) {
-                    roles.add(Enum.valueOf(Role.class, rs.getString("role")));
-                }
-                return roles;
-            }
-        }, id);
-        return roles;
     }
 }
