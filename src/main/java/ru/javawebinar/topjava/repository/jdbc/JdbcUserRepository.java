@@ -22,7 +22,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.*;
 
-import static ru.javawebinar.topjava.util.JdbcValidationUtil.*;
+import static ru.javawebinar.topjava.util.JdbcValidationUtil.validator;
 
 @Repository
 @Transactional(readOnly = true)
@@ -30,8 +30,7 @@ public class JdbcUserRepository implements UserRepository {
 
     private static final BeanPropertyRowMapper<User> USER_ROW_MAPPER = BeanPropertyRowMapper.newInstance(User.class);
     private static final BeanPropertyRowMapper<Meal> MEAL_ROW_MAPPER = BeanPropertyRowMapper.newInstance(Meal.class);
-    private static final String SQL_GET_ALL_USERS_WITH_ROLES = "SELECT DISTINCT * FROM users ORDER BY name, email";
-    private static final String SQL_GET_WITH_MEALS = "SELECT DISTINCT * FROM users WHERE id = ?";
+    private static final String SQL_GET_ALL_USERS = "SELECT DISTINCT * FROM users ORDER BY name, email";
 
     private final JdbcTemplate jdbcTemplate;
 
@@ -55,22 +54,21 @@ public class JdbcUserRepository implements UserRepository {
     @Override
     @Transactional
     public User save(User user) {
-        validate(user, validator);
+        validator.validate(user);
         BeanPropertySqlParameterSource parameterSource = new BeanPropertySqlParameterSource(user);
 
         if (user.isNew()) {
             Number newKey = insertUser.executeAndReturnKey(parameterSource);
             user.setId(newKey.intValue());
         } else {
+            deleteRoles(user); //delete old roles only if update
             if (namedParameterJdbcTemplate.update("""
                        UPDATE users SET name=:name, email=:email, password=:password,
                        registered=:registered, enabled=:enabled, calories_per_day=:caloriesPerDay WHERE id=:id
                     """, parameterSource) == 0) {
-
                 return null;
             }
         }
-        deleteRoles(user);
         insertRoles(user);
         return user;
     }
@@ -79,6 +77,7 @@ public class JdbcUserRepository implements UserRepository {
         jdbcTemplate.update("DELETE FROM user_roles WHERE user_id=?", user.id());
     }
 
+    //insert in DB
     private void insertRoles(User user) {
         Set<Role> roles = user.getRoles();
         jdbcTemplate.batchUpdate("INSERT INTO user_roles (user_id, role)  VALUES (?, ?)",
@@ -98,27 +97,26 @@ public class JdbcUserRepository implements UserRepository {
 
     @Override
     public User get(int id) {
-        List<User> users = jdbcTemplate.query("SELECT * FROM users JOIN user_roles " +
-                "ON users.id = user_roles.user_id WHERE id=?", rsExtractor, id);
-        return DataAccessUtils.singleResult(users);
+        List<User> users = jdbcTemplate.query("SELECT * FROM users WHERE id=?", USER_ROW_MAPPER, id);
+        User user = DataAccessUtils.singleResult(users);
+        user.setRoles(getRoles(id)); //when try deleted/get not found tests, service not throws NFE, but NPE
+        return user;
     }
 
+    //if not found, repository must return 0 and service will throw NFE
     @Override
     public User getByEmail(String email) {
 //        return jdbcTemplate.queryForObject("SELECT * FROM users WHERE email=?", ROW_MAPPER, email);
         List<User> users = jdbcTemplate.query("SELECT * FROM users WHERE email=?", USER_ROW_MAPPER, email);
         User user = DataAccessUtils.singleResult(users);
-        if (user != null) {
-            user.setRoles(getRoles(user.id()));
-        } else {
-            throw new NotFoundException("User with " + email + "is not found");
-        }
+        user.setRoles(getRoles(user.id()));
         return user;
     }
 
+    //N +1 for each User and N +1 for each role
     @Override
     public List<User> getAll() {
-        List<User> users = jdbcTemplate.query(SQL_GET_ALL_USERS_WITH_ROLES, USER_ROW_MAPPER);
+        List<User> users = jdbcTemplate.query(SQL_GET_ALL_USERS, USER_ROW_MAPPER);
         users.forEach(user -> user.setRoles(getRoles(user.id())));
         return users;
     }
@@ -134,27 +132,29 @@ public class JdbcUserRepository implements UserRepository {
     }
 
     public User getWithMeals(int id) {
-        List<User> users = jdbcTemplate.query(SQL_GET_WITH_MEALS, USER_ROW_MAPPER, id);
+        List<User> users = jdbcTemplate.query("SELECT DISTINCT * FROM users WHERE id = ?", USER_ROW_MAPPER, id);
+        List<Meal> meals = jdbcTemplate.query("SELECT * FROM meals WHERE user_id = ?", MEAL_ROW_MAPPER, id);
         User user = DataAccessUtils.singleResult(users);
         if (user != null) {
-            user.setMeals(getMeals(id));
             user.setRoles(getRoles(id));
+            user.setMeals(meals);
         } else {
             throw new NotFoundException("User " + id + "is not found");
         }
         return user;
     }
 
-    private List<Meal> getMeals(int id) {
-        return jdbcTemplate.query("SELECT meals.id, date_time, description, calories FROM meals JOIN users " +
-                "ON users.id = meals.user_id WHERE user_id =? ORDER BY id DESC", rs -> {
-            List<Meal> meals = new ArrayList<>();
-            while (rs.next()) {
-                meals.add(MEAL_ROW_MAPPER.mapRow(rs, rs.getRow()));
-            }
-            return meals;
-        }, id);
-    }
+    //method already exists
+//    private List<Meal> getMeals(int id) {
+//        return jdbcTemplate.query("SELECT meals.id, date_time, description, calories FROM meals JOIN users " +
+//                "ON users.id = meals.user_id WHERE user_id =? ORDER BY id DESC", rs -> {
+//            List<Meal> meals = new ArrayList<>();
+//            while (rs.next()) {
+//                meals.add(MEAL_ROW_MAPPER.mapRow(rs, rs.getRow()));
+//            }
+//            return meals;
+//        }, id);
+//    }
 
     @Component
     public static class UserWithRolesExtractor implements ResultSetExtractor<List<User>> {

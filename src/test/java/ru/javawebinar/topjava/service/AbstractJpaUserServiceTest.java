@@ -11,8 +11,17 @@ import javax.validation.ConstraintViolationException;
 import java.util.Date;
 import java.util.Set;
 
-abstract public class AbstractJpaUserServiceTest extends AbstractUserServiceTest{
+public abstract class AbstractJpaUserServiceTest extends AbstractUserServiceTest{
 
+    //other realization - not at particular jpa service test class, but in abstract service test makes
+    //@Autowired(required = false) - if not found in spring context - OK
+    //public JpaUtil jpaUtil;
+    //
+    //    @Before
+    //    public void setup() {
+    //        cacheManager.getCache("users").clear();
+    //        if(isJpeBased()) {
+    //           jpaUtil.clear2ndLevelHibernateCache();}
     @Autowired
     public JpaUtil jpaUtil;
 
@@ -21,14 +30,5 @@ abstract public class AbstractJpaUserServiceTest extends AbstractUserServiceTest
     public void setup() {
         super.setup();
         jpaUtil.clear2ndLevelHibernateCache();
-    }
-
-    @Test
-    public void createWithException() throws Exception {
-        validateRootCause(ConstraintViolationException.class, () -> service.create(new User(null, "  ", "mail@yandex.ru", "password", Role.USER)));
-        validateRootCause(ConstraintViolationException.class, () -> service.create(new User(null, "User", "  ", "password", Role.USER)));
-        validateRootCause(ConstraintViolationException.class, () -> service.create(new User(null, "User", "mail@yandex.ru", "  ", Role.USER)));
-        validateRootCause(ConstraintViolationException.class, () -> service.create(new User(null, "User", "mail@yandex.ru", "password", 9, true, new Date(), Set.of())));
-        validateRootCause(ConstraintViolationException.class, () -> service.create(new User(null, "User", "mail@yandex.ru", "password", 10001, true, new Date(), Set.of())));
     }
 }

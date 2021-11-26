@@ -34,7 +34,7 @@ public class JspMealController extends AbstractMealController {
 
     @GetMapping
     public String getAll(Model model) {
-        model.addAttribute("meals", MealsUtil.getTos(super.getAll(), SecurityUtil.authUserCaloriesPerDay()));
+        model.addAttribute("meals", super.getAll());
         return "meals";
     }
 
@@ -44,8 +44,7 @@ public class JspMealController extends AbstractMealController {
         LocalDate endDate = parseLocalDate(request.getParameter("endDate"));
         LocalTime startTime = parseLocalTime(request.getParameter("startTime"));
         LocalTime endTime = parseLocalTime(request.getParameter("endTime"));
-        List<Meal> mealsDateFiltered = super.getBetween(startDate, endDate);
-        model.addAttribute("meals", MealsUtil.getFilteredTos(mealsDateFiltered, SecurityUtil.authUserCaloriesPerDay(), startTime, endTime));
+        model.addAttribute("meals", super.getBetween(startDate, startTime, endDate, endTime));
         return "meals";
     }
 
@@ -75,6 +74,7 @@ public class JspMealController extends AbstractMealController {
         int calories = Integer.parseInt(request.getParameter("calories"));
         Meal meal = new Meal(ldt, description, calories);
         if (StringUtils.hasLength(request.getParameter("id"))) {
+            meal.setId(getId(request));
             super.update(meal);
         } else {
             super.create(meal);

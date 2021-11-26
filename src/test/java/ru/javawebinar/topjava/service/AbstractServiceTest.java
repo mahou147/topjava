@@ -49,7 +49,7 @@ public abstract class AbstractServiceTest {
         });
     }
 
-    public boolean isRepositoryTypeJpaBased() {
+    public boolean isJpaBased() {
         return environment.acceptsProfiles(Profiles.of(DATAJPA, JPA));
     }
 }

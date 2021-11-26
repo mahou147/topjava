@@ -9,16 +9,16 @@ import javax.validation.Validator;
 import javax.validation.ValidatorFactory;
 import java.util.Set;
 
-public class JdbcValidationUtil {
+public class JdbcValidationUtil<T> {
     public static final ValidatorFactory vf = Validation.buildDefaultValidatorFactory();
 
     public static final Validator validator = vf.getValidator();
 
     private static final Logger log = LoggerFactory.getLogger(JdbcValidationUtil.class);
 
-    public static void validate(Object target, Validator validator) {
-        Set<ConstraintViolation<Object>> violations = validator.validate(target);
-        for (ConstraintViolation<Object> violation : violations) {
+    public void validate(T target) {
+        Set<ConstraintViolation<T>> violations = validator.validate(target);
+        for (ConstraintViolation<T> violation : violations) {
             log.info(violation.getMessage());
         }
     }
