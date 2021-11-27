@@ -18,7 +18,6 @@ import java.util.List;
 import java.util.Set;
 
 import static org.junit.Assert.assertThrows;
-import static ru.javawebinar.topjava.MealTestData.MEAL_MATCHER;
 import static ru.javawebinar.topjava.UserTestData.*;
 
 public abstract class AbstractUserServiceTest extends AbstractServiceTest {
@@ -58,7 +57,7 @@ public abstract class AbstractUserServiceTest extends AbstractServiceTest {
 
     @Test
     public void deletedNotFound() {
-        assertThrows(NotFoundException.class, () -> service.delete(NOT_FOUND));
+        assertThrows(NotFoundException.class, () -> service.delete(UserTestData.NOT_FOUND));
     }
 
     @Test
@@ -69,7 +68,7 @@ public abstract class AbstractUserServiceTest extends AbstractServiceTest {
 
     @Test
     public void getNotFound() {
-        assertThrows(NotFoundException.class, () -> service.get(NOT_FOUND));
+        assertThrows(NotFoundException.class, () -> service.get(UserTestData.NOT_FOUND));
     }
 
     @Test
@@ -101,7 +100,7 @@ public abstract class AbstractUserServiceTest extends AbstractServiceTest {
     public void getWithMeals() {
         User user = service.getWithMeals(ADMIN_ID);
         USER_MATCHER.assertMatch(user, admin);
-        MEAL_MATCHER.assertMatch(user.getMeals(), MealTestData.admin_meals);
+        MealTestData.MEAL_MATCHER.assertMatch(user.getMeals(), MealTestData.adminMeal2, MealTestData.adminMeal1);
     }
 
     @Test
@@ -112,7 +111,6 @@ public abstract class AbstractUserServiceTest extends AbstractServiceTest {
 
     @Test
     public void createWithException() throws Exception {
-        //for works with jdbc realization: ?
         validateRootCause(ConstraintViolationException.class, () -> service.create(new User(null, "  ", "mail@yandex.ru", "password", Role.USER)));
         validateRootCause(ConstraintViolationException.class, () -> service.create(new User(null, "User", "  ", "password", Role.USER)));
         validateRootCause(ConstraintViolationException.class, () -> service.create(new User(null, "User", "mail@yandex.ru", "  ", Role.USER)));
