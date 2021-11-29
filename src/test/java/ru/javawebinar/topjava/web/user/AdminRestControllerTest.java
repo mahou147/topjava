@@ -7,16 +7,21 @@ import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import ru.javawebinar.topjava.UserTestData;
 import ru.javawebinar.topjava.model.User;
+import ru.javawebinar.topjava.service.MealService;
 import ru.javawebinar.topjava.service.UserService;
+import ru.javawebinar.topjava.util.MealsUtil;
 import ru.javawebinar.topjava.util.exception.NotFoundException;
 import ru.javawebinar.topjava.web.AbstractControllerTest;
+import ru.javawebinar.topjava.web.SecurityUtil;
 import ru.javawebinar.topjava.web.json.JsonUtil;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static ru.javawebinar.topjava.MealTestData.mealTos;
 import static ru.javawebinar.topjava.UserTestData.*;
+import static ru.javawebinar.topjava.MealTestData.MEAL_TO_MATCHER;
 
 class AdminRestControllerTest extends AbstractControllerTest {
 
@@ -24,6 +29,9 @@ class AdminRestControllerTest extends AbstractControllerTest {
 
     @Autowired
     private UserService userService;
+
+    @Autowired
+    private MealService mealService;
 
     @Test
     void get() throws Exception {
@@ -83,5 +91,16 @@ class AdminRestControllerTest extends AbstractControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
                 .andExpect(USER_MATCHER.contentJson(admin, user));
+    }
+
+    @Test
+    void getWithMeals() throws Exception {
+        perform(MockMvcRequestBuilders.get(REST_URL + USER_ID + "/with-meals"))
+                .andExpect(status().isOk())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpect(USER_MATCHER.contentJson(user));
+
+        MEAL_TO_MATCHER.assertMatch(MealsUtil.getTos(
+                mealService.getAll(USER_ID), SecurityUtil.authUserCaloriesPerDay()), mealTos);
     }
 }
