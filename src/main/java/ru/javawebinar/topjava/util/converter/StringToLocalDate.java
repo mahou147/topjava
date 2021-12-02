@@ -5,10 +5,8 @@ import org.springframework.lang.Nullable;
 import ru.javawebinar.topjava.util.DateTimeUtil;
 
 import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 
 public class StringToLocalDate implements Converter<String, LocalDate> {
-    DateTimeFormatter fmt = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
     @Override
     public @Nullable

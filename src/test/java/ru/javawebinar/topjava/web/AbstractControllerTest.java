@@ -1,5 +1,6 @@
 package ru.javawebinar.topjava.web;
 
+import org.junit.jupiter.api.Assumptions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
 import org.springframework.test.context.ActiveProfiles;
@@ -31,18 +32,23 @@ public abstract class AbstractControllerTest {
 
     private static final CharacterEncodingFilter CHARACTER_ENCODING_FILTER = new CharacterEncodingFilter();
 
+    @Autowired
+    public Environment env;
+
+//    @Autowired
+//    private Environment environment;
+
     static {
         CHARACTER_ENCODING_FILTER.setEncoding("UTF-8");
         CHARACTER_ENCODING_FILTER.setForceEncoding(true);
     }
 
-    @Autowired
-    public Environment environment;
-
     private MockMvc mockMvc;
 
     @Autowired
     private WebApplicationContext webApplicationContext;
+
+
 
     @PostConstruct
     private void postConstruct() {
@@ -56,7 +62,11 @@ public abstract class AbstractControllerTest {
         return mockMvc.perform(builder);
     }
 
-    public boolean isRepositoryTypeDataJpa() {
-        return environment.acceptsProfiles(org.springframework.core.env.Profiles.of(DATAJPA));
+    public void assumeDataJpa() {
+        Assumptions.assumeTrue(env.acceptsProfiles(org.springframework.core.env.Profiles.of(Profiles.DATAJPA)), "DATA-JPA only");
     }
+
+//    public boolean isRepositoryTypeDataJpa() {
+//        return environment.acceptsProfiles(org.springframework.core.env.Profiles.of(DATAJPA));
+//    }
 }

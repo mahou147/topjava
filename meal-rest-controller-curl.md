@@ -19,7 +19,7 @@ curl http://localhost:8080/topjava/rest/meals/100003
 ```
 POST create NEW MEAL: 
 ```
-curl -X POST -H "Content-Type: application/json; charset=ISO-8859-1" -d '{"id": null, "dateTime": "2020-01-31T13:30:00", "description": "Новый Обед", "calories": 1000, "user": null}' http://localhost:8080/topjava/rest/meals
+curl -X POST -H "Content-Type: application/json;" -d '{"id": null, "dateTime": "2020-01-31T13:30:00", "description": "\u041d\u043e\u0432\u044b\u0439\u0020\u041e\u0431\u0435\u0434", "calories": 1000, "user": null}' http://localhost:8080/topjava/rest/meals
 ```
 PUT update MEAL with id 100004: 
 ```
