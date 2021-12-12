@@ -17,6 +17,22 @@ function clearFilter() {
     $.get(mealAjaxUrl, updateTableByData);
 }
 
+$.ajaxSetup({
+    converters: {
+        "text json": function (stringData) {
+            var json = JSON.parse(stringData);
+            if (typeof json === 'object') {
+                $(json).each(function () {
+                    if (this.hasOwnProperty('dateTime')) {
+                        this.dateTime = this.dateTime.substr(0, 16).replace('T', ' ');
+                    }
+                });
+            }
+            return json;
+        }
+    }
+});
+
 $(function () {
     makeEditable(
         $("#datatable").DataTable({
@@ -28,31 +44,13 @@ $(function () {
             "info": true,
             "columns": [
                 {
-                    "data": "dateTime",
-                    "render": function (date, type, row) {
-                        if (type === "display") {
-                            return date.substring(0, 10);
-                        }
-                        return date;
-                    }
+                    "data": "dateTime"
                 },
                 {
-                    "data": "description",
-                    "render": function (date, type, row) {
-                        if (type === "display") {
-                            return date;
-                        }
-                        return date;
-                    }
+                    "data": "description"
                 },
                 {
-                    "data": "calories",
-                    "render": function (date, type, row) {
-                        if (type === "display") {
-                            return date;
-                        }
-                        return date;
-                    }
+                    "data": "calories"
                 },
                 {
                     "orderable": false,
@@ -72,11 +70,7 @@ $(function () {
                 ]
             ],
             "createdRow": function (row, data, dataIndex) {
-                if (!data.excess) {
-                    $(row).attr("data-meal-excess", false);
-                } else {
-                    $(row).attr("data-meal-excess", true);
-                }
+                $(row).attr("data-meal-excess", data.excess);
             }
         })
     );

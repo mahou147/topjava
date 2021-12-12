@@ -22,7 +22,11 @@ class RootControllerTest extends AbstractControllerTest {
 
     @Test
     void unAuth() throws Exception {
-        perform(get("/users", "/meals"))
+        perform(get("/users"))
+                .andDo(print())
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("http://localhost/login"));
+        perform(get("/meals"))
                 .andDo(print())
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("http://localhost/login"));
