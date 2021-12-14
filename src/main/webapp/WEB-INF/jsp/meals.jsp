@@ -79,7 +79,7 @@
 
                     <div class="form-group">
                         <label for="dateTime" class="col-form-label"><spring:message code="meal.dateTime"/></label>
-                        <input type="datetime-local" class="form-control" id="dateTime" name="dateTime"
+                        <input class="form-control" id="dateTime" name="dateTime"
                                placeholder="<spring:message code="meal.dateTime"/>">
                     </div>
 
@@ -115,5 +115,13 @@
     const i18n = [];
     i18n["addTitle"] = '<spring:message code="meal.add"/>';
     i18n["editTitle"] = '<spring:message code="meal.edit"/>';
+
+    i18n['common.deleted'] = '<spring:message code="common.deleted"/>';
+
+    i18n['common.saved'] = '<spring:message code="common.saved"/>';
+
+    i18n['common.confirm'] = '<spring:message code="common.confirm"/>';
+
+    i18n['common.errorStatus'] = '<spring:message code="common.errorStatus"/>';
 </script>
 </html>
