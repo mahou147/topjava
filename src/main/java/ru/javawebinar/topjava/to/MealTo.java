@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 import java.util.Objects;
 
 public class MealTo extends BaseTo {
+
     private final LocalDateTime dateTime;
 
     private final String description;

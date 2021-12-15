@@ -43,6 +43,6 @@ public class DateTimeUtil {
 
     public static @Nullable
     LocalDateTime parseLocalDateTime(@Nullable String str) {
-        return StringUtils.hasLength(str) ? LocalDateTime.parse(str.formatted("yyyy-MM-dd'T'HH:mm")) : null;
+        return StringUtils.hasLength(str) ? LocalDateTime.parse(str, DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")) : null;
     }
 }
