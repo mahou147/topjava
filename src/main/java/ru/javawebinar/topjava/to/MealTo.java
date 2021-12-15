@@ -9,7 +9,7 @@ public class MealTo extends BaseTo {
 
     private final String description;
 
-    private final Integer calories;
+    private final int calories;
 
     private final boolean excess;
 
@@ -30,7 +30,7 @@ public class MealTo extends BaseTo {
         return description;
     }
 
-    public Integer getCalories() {
+    public int getCalories() {
         return calories;
     }
 
@@ -43,16 +43,16 @@ public class MealTo extends BaseTo {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         MealTo mealTo = (MealTo) o;
-        return id.equals(mealTo.id)
-                && excess == mealTo.excess
-                && dateTime.equals(mealTo.dateTime)
-                && description.equals(mealTo.description)
-                && calories.equals(mealTo.calories);
+        return calories == mealTo.calories &&
+                excess == mealTo.excess &&
+                Objects.equals(id, mealTo.id) &&
+                Objects.equals(dateTime, mealTo.dateTime) &&
+                Objects.equals(description, mealTo.description);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(dateTime, description, calories, excess);
+        return Objects.hash(id, dateTime, description, calories, excess);
     }
 
     @Override

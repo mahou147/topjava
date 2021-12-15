@@ -39,10 +39,10 @@ public class MealUIController extends AbstractMealController {
     }
 
     @PostMapping
-    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @ResponseStatus
     public ResponseEntity<String> createOrUpdate(@Valid Meal meal, BindingResult result) {
-        if(result.hasErrors()) {
-            return ValidationUtil.printErrors(result);
+        if (result.hasErrors()) {
+            return ValidationUtil.handleMethodArgumentNotValid(result);
         }
         if (meal.isNew()) {
             super.create(meal);
