@@ -112,6 +112,30 @@ class AdminRestControllerTest extends AbstractControllerTest {
     }
 
     @Test
+    void createWithDuplicateEmail() throws Exception {
+        String duplicatedPassword = user.getEmail();
+        User newUser = getNew();
+        newUser.setEmail(duplicatedPassword);
+        perform(MockMvcRequestBuilders.post(REST_URL)
+                .contentType(MediaType.APPLICATION_JSON)
+                .with(userHttpBasic(admin))
+                .content(jsonWithPassword(newUser, newUser.getPassword())))
+                .andExpect(status().isUnprocessableEntity());
+    }
+
+    @Test
+    void updateWithDuplicateEmail() throws Exception {
+        String duplicatedPassword = admin.getEmail();
+        User updated = user;
+        updated.setPassword(duplicatedPassword);
+        perform(MockMvcRequestBuilders.put(REST_URL + USER_ID)
+                .contentType(MediaType.APPLICATION_JSON)
+                .with(userHttpBasic(admin))
+                .content(jsonWithPassword(updated, updated.getPassword())))
+                .andExpect(status().isUnprocessableEntity());
+    }
+
+    @Test
     void getAll() throws Exception {
         perform(MockMvcRequestBuilders.get(REST_URL)
                 .with(userHttpBasic(admin)))
