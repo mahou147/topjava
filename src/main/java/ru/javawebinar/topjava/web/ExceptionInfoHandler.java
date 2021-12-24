@@ -6,12 +6,10 @@ import org.springframework.context.support.MessageSourceAccessor;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.BindException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
@@ -29,7 +27,7 @@ import static ru.javawebinar.topjava.util.exception.ErrorType.*;
 @RestControllerAdvice(annotations = RestController.class)
 @Order(Ordered.HIGHEST_PRECEDENCE + 5)
 public class ExceptionInfoHandler {
-    private static Logger log = LoggerFactory.getLogger(ExceptionInfoHandler.class);
+    private static final Logger log = LoggerFactory.getLogger(ExceptionInfoHandler.class);
 
     public static final String EXCEPTION_DUPLICATE_EMAIL = "exception.user.duplicateEmail";
     public static final String EXCEPTION_DUPLICATE_DATETIME = "exception.meal.duplicateDateTime";
@@ -45,13 +43,11 @@ public class ExceptionInfoHandler {
     }
 
     //  http://stackoverflow.com/a/22358422/548473
-    @ResponseStatus(HttpStatus.UNPROCESSABLE_ENTITY)
     @ExceptionHandler(NotFoundException.class)
     public ResponseEntity<ErrorInfo> handleError(HttpServletRequest req, NotFoundException e) {
         return logAndGetErrorInfo(req, e, false, DATA_NOT_FOUND);
     }
 
-    @ResponseStatus(HttpStatus.CONFLICT)  // 409
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ResponseEntity<ErrorInfo> conflict(HttpServletRequest req, DataIntegrityViolationException e) {
         String rootMsg = ValidationUtil.getRootCause(e).getMessage();
@@ -66,14 +62,11 @@ public class ExceptionInfoHandler {
         return logAndGetErrorInfo(req, e, false, DATA_ERROR);
     }
 
-    @ResponseStatus(HttpStatus.UNPROCESSABLE_ENTITY)  // 422
     @ExceptionHandler({IllegalRequestDataException.class, MethodArgumentTypeMismatchException.class, HttpMessageNotReadableException.class})
     public ResponseEntity<ErrorInfo> illegalRequestDataError(HttpServletRequest req, Exception e) {
         return logAndGetErrorInfo(req, e, false, VALIDATION_ERROR);
     }
 
-
-    @ResponseStatus(HttpStatus.BAD_REQUEST)  // 400
     @ExceptionHandler(BindException.class)
     public ResponseEntity<ErrorInfo> processValidationErrors(HttpServletRequest req, BindException e) {
         String[] details = e.getBindingResult().getFieldErrors().stream()
@@ -88,7 +81,6 @@ public class ExceptionInfoHandler {
         Throwable rootCause = ValidationUtil.logAndGetRootCause(log, req, e, logStackTrace, errorType);
         return ResponseEntity.status(errorType.getStatus())
                 .body(new ErrorInfo(req.getRequestURL(), errorType,
-                        messageSourceAccessor.getMessage(errorType.getErrorCode()),
                         details.length != 0 ? details : new String[]{ValidationUtil.getMessage(rootCause)})
                 );
     }
